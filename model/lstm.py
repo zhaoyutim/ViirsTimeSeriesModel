@@ -15,6 +15,6 @@ if __name__ == '__main__':
     gru = GRUModel()
     # TODO: Normalization only on train data
     performance = {}
-    history = gru.compile_and_fit(gru.model, x_train, y_train)
+    history = gru.compile_and_fit(gru.model, x_train, y_train, MAX_EPOCHS)
 
     performance['LSTM'] = gru.model.evaluate(x_test, y_test, verbose=0)

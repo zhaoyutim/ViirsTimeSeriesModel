@@ -45,7 +45,7 @@ class GRUModel:
         ])
         return gru_model
 
-    def compile_and_fit(self, model, train_dataset, patience=2):
+    def compile_and_fit(self, model, x_train, y_train, ephoches, patience=2):
         logdir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
         early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
@@ -56,6 +56,6 @@ class GRUModel:
                       optimizer=tf.optimizers.Adam(1e-3),
                       metrics=[tf.keras.losses.CategoricalCrossentropy(from_logits=True), self.f1_m])
 
-        history = model.fit(x_train, y_train, epochs=MAX_EPOCHS,
+        history = model.fit(x_train, y_train, epochs=ephoches,
                             validation_split=0.2)
         return history
