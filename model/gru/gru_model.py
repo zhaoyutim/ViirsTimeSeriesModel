@@ -24,6 +24,8 @@ class GRUModel:
 
 
     def f1_m(self, y_true, y_pred):
+        y_true = y_true[:,0]
+        y_pred = y_pred[:,0]
         precision = self.precision_m(y_true, y_pred)
         recall = self.recall_m(y_true, y_pred)
         return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
@@ -36,12 +38,12 @@ class GRUModel:
 
     def get_model(self):
         gru_model = tf.keras.models.Sequential([
-            tf.keras.layers.GRU(256, input_shape=(10, 45), return_sequences=True),
+            tf.keras.layers.GRU(256, input_shape=(10, 18), return_sequences=True),
             tf.keras.layers.GRU(128, dropout=0.2, return_sequences=True),
             tf.keras.layers.GRU(64, dropout=0.2, return_sequences=True),
             tf.keras.layers.GRU(32, return_sequences=True),
             tf.keras.layers.GRU(16, return_sequences=True),
-            tf.keras.layers.Dense(2)
+            tf.keras.layers.Dense(1)
         ])
         return gru_model
 
@@ -52,9 +54,9 @@ class GRUModel:
                                                           patience=patience,
                                                           mode='min')
 
-        model.compile(loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
+        model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=False),
                       optimizer=tf.optimizers.Adam(1e-3),
-                      metrics=[tf.keras.losses.CategoricalCrossentropy(from_logits=True), self.f1_m])
+                      metrics=[tf.keras.losses.BinaryCrossentropy(from_logits=False), 'accuracy'])
 
         history = model.fit(x_train, y_train, epochs=ephoches,
                             validation_split=0.2)
