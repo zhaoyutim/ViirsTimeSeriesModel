@@ -8,6 +8,7 @@ import keras.backend as K
 class GRUModel:
     def __init__(self):
         self.model =  self.get_model()
+        self.model_10_layers = self.get_model_10_layers()
 
     def recall_m(self, y_true, y_pred):
         true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
@@ -39,8 +40,24 @@ class GRUModel:
             tf.keras.layers.GRU(256, input_shape=(10, 45), return_sequences=True),
             tf.keras.layers.GRU(128, dropout=0.2, return_sequences=True),
             tf.keras.layers.GRU(64, dropout=0.2, return_sequences=True),
-            tf.keras.layers.GRU(32, return_sequences=True),
-            tf.keras.layers.GRU(16, return_sequences=True),
+            tf.keras.layers.GRU(32, dropout=0.2,return_sequences=True),
+            tf.keras.layers.GRU(16, dropout=0.2,return_sequences=True),
+            tf.keras.layers.Dense(2)
+        ])
+        return gru_model
+
+    def get_model_10_layers(self):
+        gru_model = tf.keras.models.Sequential([
+            tf.keras.layers.GRU(256, input_shape=(10, 45), return_sequences=True),
+            tf.keras.layers.GRU(256, dropout=0.2, return_sequences=True),
+            tf.keras.layers.GRU(128, dropout=0.2, return_sequences=True),
+            tf.keras.layers.GRU(128, dropout=0.2, return_sequences=True),
+            tf.keras.layers.GRU(64, dropout=0.2, return_sequences=True),
+            tf.keras.layers.GRU(64, dropout=0.2, return_sequences=True),
+            tf.keras.layers.GRU(32, dropout=0.2,return_sequences=True),
+            tf.keras.layers.GRU(32, dropout=0.2,return_sequences=True),
+            tf.keras.layers.GRU(16, dropout=0.2,return_sequences=True),
+            tf.keras.layers.GRU(16, dropout=0.2,return_sequences=True),
             tf.keras.layers.Dense(2)
         ])
         return gru_model
