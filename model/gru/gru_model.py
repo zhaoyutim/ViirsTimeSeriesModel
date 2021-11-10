@@ -46,9 +46,9 @@ class GRUModel:
         ])
         return gru_model
 
-    def get_model_10_layers(self):
+    def get_model_10_layers(self, input_shape, num_class):
         gru_model = tf.keras.models.Sequential([
-            tf.keras.layers.GRU(256, input_shape=(10, 45), return_sequences=True),
+            tf.keras.layers.GRU(256, input_shape=input_shape, return_sequences=True),
             tf.keras.layers.GRU(256, dropout=0.2, return_sequences=True),
             tf.keras.layers.GRU(128, dropout=0.2, return_sequences=True),
             tf.keras.layers.GRU(128, dropout=0.2, return_sequences=True),
@@ -58,21 +58,28 @@ class GRUModel:
             tf.keras.layers.GRU(32, dropout=0.2,return_sequences=True),
             tf.keras.layers.GRU(16, dropout=0.2,return_sequences=True),
             tf.keras.layers.GRU(16, dropout=0.2,return_sequences=True),
-            tf.keras.layers.Dense(2)
+            tf.keras.layers.Dense(num_class)
         ])
         return gru_model
 
-    def compile_and_fit(self, model, x_train, y_train, ephoches, patience=2):
+    def compile_and_fit(self, model, x_train, y_train, batch_size, ephoches, patience=2):
         logdir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
         early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
                                                           patience=patience,
                                                           mode='min')
+        checkpoint_filepath = "/tmp/checkpoint_gru"
+        checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+            checkpoint_filepath,
+            monitor="val_accuracy",
+            save_best_only=True,
+            save_weights_only=True,
+        )
 
         model.compile(loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
                       optimizer=tf.optimizers.Adam(1e-3),
                       metrics=[tf.keras.losses.CategoricalCrossentropy(from_logits=True), self.f1_m])
 
-        history = model.fit(x_train, y_train, epochs=ephoches,
-                            validation_split=0.2)
+        history = model.fit(x_train, y_train, batch_size = batch_size, epochs=ephoches,
+                            validation_split=0.1, callbacks=[checkpoint_callback])
         return history
