@@ -42,18 +42,18 @@ class VisionTransformerGenerator:
         recall = self.recall_m(y_true, y_pred)
         return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
-    def data_augmentation(self):
-        data_augmentation = keras.Sequential(
-            [
-                layers.Normalization(),
-                layers.Resizing(self.resize_size, self.resize_size),
-                layers.RandomFlip("horizontal"),
-                layers.RandomRotation(factor=0.02),
-                layers.RandomZoom(height_factor=0.2, width_factor=0.2),
-            ],
-            name="data_augmentation",
-        )
-        return data_augmentation
+    # def data_augmentation(self):
+    #     data_augmentation = keras.Sequential(
+    #         [
+    #             layers.Normalization(),
+    #             layers.Resizing(self.resize_size, self.resize_size),
+    #             layers.RandomFlip("horizontal"),
+    #             layers.RandomRotation(factor=0.02),
+    #             layers.RandomZoom(height_factor=0.2, width_factor=0.2),
+    #         ],
+    #         name="data_augmentation",
+    #     )
+    #     return data_augmentation
 
 
     def create_vit_classifier(self):
@@ -105,7 +105,7 @@ class VisionTransformerGenerator:
             x = layers.Dropout(dropout_rate)(x)
         return x
 
-    def run_experiment(self, x_train, y_train, batch_size=256, num_epochs=100, learning_rate=0.001, weight_decay=0.0001):
+    def run_experiment(self, x_train, y_train, batch_size=256, num_epochs=100, learning_rate=0.001, weight_decay=0.0001, callbacks=[]):
         optimizer = tfa.optimizers.AdamW(
             learning_rate=learning_rate, weight_decay=weight_decay
         )
@@ -116,7 +116,7 @@ class VisionTransformerGenerator:
             metrics=[
                 keras.metrics.CategoricalAccuracy(name="accuracy"),
                 self.f1_m,
-                # tf.keras.metrics.Precision()
+                tf.keras.metrics.Precision()
                 # keras.metrics.SparseTopKCategoricalAccuracy(5, name="top-5-accuracy"),
             ],
         )
@@ -128,14 +128,16 @@ class VisionTransformerGenerator:
             save_best_only=True,
             save_weights_only=True,
         )
+        callbacks.append(checkpoint_callback)
 
         history = self.model.fit(
             x=x_train,
             y=y_train,
             batch_size=batch_size,
             epochs=num_epochs,
+            steps_per_epoch=4000,
             validation_split=0.1,
-            callbacks=[checkpoint_callback],
+            callbacks=callbacks,
         )
 
         self.model.load_weights(checkpoint_filepath)

@@ -32,23 +32,38 @@ import matplotlib.pyplot as plt
 #         plt.axis("off")
 
 if __name__=='__main__':
-    MAX_EPOCHS = 100
-    dataset = np.load('../data/proj3_test.npy').transpose((1,0,2))
-    print(dataset.shape)
+    MAX_EPOCHS = 20
+    BATCH_SIZE = 1024
+    dataset = np.load('../data/proj3_train_5_channel_full.npy').transpose((1,0,2))[:,:,:45]
+    y_dataset = np.load('../data/y_dataset.npy')
+    def make_generator(inputs, labels):
+        def _generator():
+            for input, label in zip(inputs, labels):
+                yield input, label
+        return _generator
+    dataset = tf.data.Dataset.from_generator(make_generator(dataset, y_dataset), (tf.float32, tf.int16))
+    shuffled_dataset = dataset.shuffle(10000)
+    train_dataset = shuffled_dataset.take(int(y_dataset.shape[0]*0.8)).batch(BATCH_SIZE)
+    val_dataset = shuffled_dataset.skip(int(y_dataset.shape[0]*0.8))
+    val_dataset = val_dataset.take(int(y_dataset.shape[0])).batch(BATCH_SIZE)
+    # positive_sample = dataset[(dataset[:,:,45]>0).any(axis=1)]
+    # negative_sample = dataset[(dataset[:,:,45]==0).any(axis=1)]
+    # negative_sample = negative_sample[np.random.choice(negative_sample.shape[0], positive_sample.shape[0])]
+    # dataset = np.concatenate((positive_sample,negative_sample), axis=0)
+    # y_dataset = np.zeros((dataset.shape[0],dataset.shape[1],3))
+    # fire = dataset[:, :, 46] > 0
+    # non_fire = dataset[:, :, 46] ==0
+    # cloud = dataset[:,:,45] ==0
+    # non_cloud = dataset[:,:,45] > 0
+    # y_dataset[: ,:, 0] = np.logical_and(fire, non_cloud)
+    # y_dataset[:, :, 1] = np.logical_and(non_fire, non_cloud)
+    # y_dataset[:, :, 2] = cloud
+    # np.save('y_dataset.npy', y_dataset)
+    # x_train, x_test, y_train, y_test = train_test_split(dataset[:,:,:45], y_dataset, test_size=0.2)
 
-    positive_sample = dataset[(dataset[:,:,45]>0).any(axis=1)]
-    negative_sample = dataset[(dataset[:,:,45]==0).any(axis=1)]
-    negative_sample = negative_sample[np.random.choice(negative_sample.shape[0], positive_sample.shape[0])]
-    dataset = np.concatenate((positive_sample,negative_sample), axis=0)
-    y_dataset = np.zeros((dataset.shape[0],dataset.shape[1],2))
-    y_dataset[: ,:, 0] = dataset[:, :, 45] > 0
-    y_dataset[:, :, 1] = dataset[:, :, 45] == 0
-
-    x_train, x_test, y_train, y_test = train_test_split(dataset[:,:,:45], y_dataset, test_size=0.2)
-
-    input_shape = x_train[0,:,:].shape
+    # input_shape = dataset[0,:,:45].shape
     # Patch parameters
-    num_classes=2
+    num_classes=3
     # image_size = 72  # We'll resize input images to this size
     # patch_size = 6  # Size of the patches to be extract from the input images
     # num_patches = (image_size // patch_size) ** 2
@@ -67,6 +82,6 @@ if __name__=='__main__':
 
     # visualizalize_patches()
 
-    vit_gen = VisionTransformerGenerator(input_shape, projection_dim, transformer_layers, num_heads, mlp_head_units, num_classes)
+    vit_gen = VisionTransformerGenerator((10,45), projection_dim, transformer_layers, num_heads, mlp_head_units, num_classes)
 
-    history = vit_gen.run_experiment(x_train, y_train, x_test, y_test, batch_size=256, num_epochs=100, learning_rate=0.001, weight_decay=0.0001)
+    history = vit_gen.run_experiment(train_dataset, val_dataset, batch_size=BATCH_SIZE, num_epochs=MAX_EPOCHS, learning_rate=0.001, weight_decay=0.0001)

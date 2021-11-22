@@ -6,9 +6,9 @@ from sklearn.model_selection import train_test_split
 import tensorflow as tf
 import keras.backend as K
 class GRUModel:
-    def __init__(self):
+    def __init__(self, input_shape, mum_classes):
         self.model =  self.get_model()
-        self.model_10_layers = self.get_model_10_layers()
+        self.model_10_layers = self.get_model_10_layers(input_shape, mum_classes)
 
     def recall_m(self, y_true, y_pred):
         true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
