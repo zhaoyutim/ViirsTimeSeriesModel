@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from tensorflow import keras
 
 from model.vit.utilities.patches import Patches
+from model.vit.utilities.weights_loader import load_weights_numpy
 from model.vit.vit_model import VisionTransformerGenerator
 import matplotlib.pyplot as plt
 
@@ -32,20 +33,20 @@ import matplotlib.pyplot as plt
 #         plt.axis("off")
 
 if __name__=='__main__':
-    MAX_EPOCHS = 20
-    BATCH_SIZE = 1024
-    dataset = np.load('../data/proj3_train_5_channel_full.npy').transpose((1,0,2))[:,:,:45]
-    y_dataset = np.load('../data/y_dataset.npy')
-    def make_generator(inputs, labels):
-        def _generator():
-            for input, label in zip(inputs, labels):
-                yield input, label
-        return _generator
-    dataset = tf.data.Dataset.from_generator(make_generator(dataset, y_dataset), (tf.float32, tf.int16))
-    shuffled_dataset = dataset.shuffle(10000)
-    train_dataset = shuffled_dataset.take(int(y_dataset.shape[0]*0.8)).batch(BATCH_SIZE)
-    val_dataset = shuffled_dataset.skip(int(y_dataset.shape[0]*0.8))
-    val_dataset = val_dataset.take(int(y_dataset.shape[0])).batch(BATCH_SIZE)
+    # MAX_EPOCHS = 20
+    # BATCH_SIZE = 1024
+    # dataset = np.load('../data/proj3_train_5_channel_full.npy').transpose((1,0,2))[:,:,:45]
+    # y_dataset = np.load('../data/y_dataset.npy')
+    # def make_generator(inputs, labels):
+    #     def _generator():
+    #         for input, label in zip(inputs, labels):
+    #             yield input, label
+    #     return _generator
+    # dataset = tf.data.Dataset.from_generator(make_generator(dataset, y_dataset), (tf.float32, tf.int16))
+    # shuffled_dataset = dataset.shuffle(10000)
+    # train_dataset = shuffled_dataset.take(int(y_dataset.shape[0]*0.8)).batch(BATCH_SIZE)
+    # val_dataset = shuffled_dataset.skip(int(y_dataset.shape[0]*0.8))
+    # val_dataset = val_dataset.take(int(y_dataset.shape[0])).batch(BATCH_SIZE)
     # positive_sample = dataset[(dataset[:,:,45]>0).any(axis=1)]
     # negative_sample = dataset[(dataset[:,:,45]==0).any(axis=1)]
     # negative_sample = negative_sample[np.random.choice(negative_sample.shape[0], positive_sample.shape[0])]
@@ -75,7 +76,7 @@ if __name__=='__main__':
         projection_dim * 2,
         projection_dim,
     ]  # Size of the transformer layers
-    transformer_layers = 8
+    transformer_layers = 16
 
     # Size of the dense layers of the final classifier
     mlp_head_units = [2048, 1024]
@@ -84,4 +85,5 @@ if __name__=='__main__':
 
     vit_gen = VisionTransformerGenerator((10,45), projection_dim, transformer_layers, num_heads, mlp_head_units, num_classes)
 
-    history = vit_gen.run_experiment(train_dataset, val_dataset, batch_size=BATCH_SIZE, num_epochs=MAX_EPOCHS, learning_rate=0.001, weight_decay=0.0001)
+    load_weights_numpy(vit_gen.model, '/Users/zhaoyu/PycharmProjects/ViirsTimeSeriesModel/weights/ViT-B_16.npz', False, 256, 256)
+    # history = vit_gen.run_experiment(train_dataset, val_dataset, batch_size=BATCH_SIZE, num_epochs=MAX_EPOCHS, learning_rate=0.001, weight_decay=0.0001)

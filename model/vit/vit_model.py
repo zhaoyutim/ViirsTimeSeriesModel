@@ -115,8 +115,7 @@ class VisionTransformerGenerator:
             loss=keras.losses.CategoricalCrossentropy(from_logits=True),
             metrics=[
                 keras.metrics.CategoricalAccuracy(name="accuracy"),
-                self.f1_m,
-                tf.keras.metrics.Precision()
+                self.f1_m
                 # keras.metrics.SparseTopKCategoricalAccuracy(5, name="top-5-accuracy"),
             ],
         )
@@ -135,7 +134,6 @@ class VisionTransformerGenerator:
             y=y_train,
             batch_size=batch_size,
             epochs=num_epochs,
-            steps_per_epoch=4000,
             validation_split=0.1,
             callbacks=callbacks,
         )

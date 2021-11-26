@@ -42,7 +42,7 @@ class GRUModel:
             tf.keras.layers.GRU(64, dropout=0.2, return_sequences=True),
             tf.keras.layers.GRU(32, dropout=0.2,return_sequences=True),
             tf.keras.layers.GRU(16, dropout=0.2,return_sequences=True),
-            tf.keras.layers.Dense(2)
+            tf.keras.layers.Dense(1, activation='sigmoid')
         ])
         return gru_model
 
@@ -58,7 +58,7 @@ class GRUModel:
             tf.keras.layers.GRU(32, dropout=0.2,return_sequences=True),
             tf.keras.layers.GRU(16, dropout=0.2,return_sequences=True),
             tf.keras.layers.GRU(16, dropout=0.2,return_sequences=True),
-            tf.keras.layers.Dense(num_class)
+            tf.keras.layers.Dense(1, activation='sigmoid')
         ])
         return gru_model
 
@@ -76,9 +76,9 @@ class GRUModel:
             save_weights_only=True,
         )
 
-        model.compile(loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
+        model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=False),
                       optimizer=tf.optimizers.Adam(1e-3),
-                      metrics=[tf.keras.losses.CategoricalCrossentropy(from_logits=True), self.f1_m])
+                      metrics=[tf.keras.losses.BinaryCrossentropy(from_logits=False), self.f1_m])
 
         history = model.fit(x_train, y_train, batch_size = batch_size, epochs=ephoches,
                             validation_split=0.1, callbacks=[checkpoint_callback])

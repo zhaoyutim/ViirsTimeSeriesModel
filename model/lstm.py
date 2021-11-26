@@ -6,6 +6,7 @@ from model.gru.gru_model import GRUModel
 
 if __name__ == '__main__':
     MAX_EPOCHS = 100
+    batch_size = 256
     dataset = np.load('../data/proj3_test.npy').transpose((1,0,2))
     print(dataset.shape)
 
@@ -17,10 +18,10 @@ if __name__ == '__main__':
     # y_dataset[: ,:, 0] = dataset[:, :, 45] > 0
     # y_dataset[:, :, 1] = dataset[:, :, 45] == 0
 
-    x_train, x_test, y_train, y_test = train_test_split(dataset[:,:,:45], dataset[:,:,45], test_size=0.2)
-    gru = GRUModel()
+    x_train, x_test, y_train, y_test = train_test_split(dataset[:,:,:45], dataset[:,:,[45]], test_size=0.2)
+    gru = GRUModel((10,45), 2)
     # TODO: Normalization only on train data
     performance = {}
-    history = gru.compile_and_fit(gru.model, x_train, y_train, MAX_EPOCHS)
+    history = gru.compile_and_fit(gru.model, x_train, y_train, batch_size, MAX_EPOCHS)
 
     performance['LSTM'] = gru.model.evaluate(x_test, y_test, verbose=0)
