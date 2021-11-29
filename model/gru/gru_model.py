@@ -58,7 +58,7 @@ class GRUModel:
             tf.keras.layers.GRU(32, dropout=0.2,return_sequences=True),
             tf.keras.layers.GRU(16, dropout=0.2,return_sequences=True),
             tf.keras.layers.GRU(16, dropout=0.2,return_sequences=True),
-            tf.keras.layers.Dense(num_class, activation='sigmoid')
+            tf.keras.layers.Dense(1, activation='sigmoid')
         ])
         return gru_model
 
