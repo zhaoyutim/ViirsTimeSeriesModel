@@ -1,7 +1,6 @@
 import tensorflow as tf
 from tensorflow import keras
 
-from model.tokenize_layer.tokenize_layer import TokenizeLayer
 from model.vit.utilities.patch_encoder import PatchEncoder
 from model.vit.utilities.patches import Patches
 from tensorflow.keras import layers
@@ -57,7 +56,7 @@ class VisionTransformerGenerator:
     #     return data_augmentation
 
 
-    def create_vit_classifier(self, batch_size=1):
+    def create_vit_classifier(self):
         inputs = layers.Input(shape=self.input_shape)
         num_timestamps = 10
         # Augment data.
@@ -66,8 +65,7 @@ class VisionTransformerGenerator:
         # patches = Patches(self.patch_size)(augmented)
         # Encode patches.
         # num_patches = (self.resize_size // self.patch_size) ** 2
-        tokenized_images = TokenizeLayer(3, batch_size)(inputs)
-        encoded_patches = PatchEncoder(num_timestamps, self.projection_dim)(tokenized_images)
+        encoded_patches = PatchEncoder(num_timestamps, self.projection_dim)(inputs)
         transformer_units = [
             self.projection_dim * 2,
             self.projection_dim,
@@ -97,7 +95,6 @@ class VisionTransformerGenerator:
         features = self.mlp(encoded_patches, hidden_units=self.mlp_head_units, dropout_rate=0.5)
         # Classify outputs.
         logits = layers.Dense(self.num_classes)(features)
-        logits = tf.reshape(logits, (-1, self.input_shape[0], self.input_shape[1], 10, 2))
         # Create the Keras model.
         model = keras.Model(inputs=inputs, outputs=logits)
         return model

@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from tensorflow import keras
-import tensorflow_addons as tfa
+
 from model.vit.utilities.patches import Patches
 from model.vit.utilities.weights_loader import load_weights_numpy
 from model.vit.vit_model import VisionTransformerGenerator
@@ -64,23 +64,7 @@ if __name__=='__main__':
 
     # input_shape = dataset[0,:,:45].shape
     # Patch parameters
-    # visualizalize_patches()
-    batch_size = 1
-    dataset = np.load('../data/proj3_test_img.npy').transpose((2, 3, 0, 1))
-    print(dataset.shape)
-    shape = 112
-
-    # positive_sample = dataset[(dataset[:,:,45]>0).any(axis=1)]
-    # negative_sample = dataset[(dataset[:,:,45]==0).any(axis=1)]
-    # negative_sample = negative_sample[np.random.choice(negative_sample.shape[0], positive_sample.shape[0])]
-    # dataset = np.concatenate((positive_sample,negative_sample), axis=0)
-    y_dataset = np.zeros((shape,shape,10,2))
-    y_dataset[: ,:, :, 0] = dataset[:shape,:shape,:,5] > 0
-    y_dataset[:, :, :, 1] = dataset[:shape,:shape,:,5] == 0
-    num_classes=2
-
-    train_dataset = tf.data.Dataset.from_tensor_slices((dataset[np.newaxis,:shape,:shape,:,:5], y_dataset[np.newaxis,:,:,:,:]))
-    train_dataset = train_dataset.batch(batch_size)
+    num_classes=3
     # image_size = 72  # We'll resize input images to this size
     # patch_size = 6  # Size of the patches to be extract from the input images
     # num_patches = (image_size // patch_size) ** 2
@@ -97,44 +81,9 @@ if __name__=='__main__':
     # Size of the dense layers of the final classifier
     mlp_head_units = [2048, 1024]
 
+    # visualizalize_patches()
 
+    vit_gen = VisionTransformerGenerator((10,45), projection_dim, transformer_layers, num_heads, mlp_head_units, num_classes)
 
-    # x_train, x_test, y_train, y_test = train_test_split(dataset[np.newaxis, :,:,:,:5], dataset[np.newaxis, :,:,:,5], test_size=0.2)
-    vit_gen = VisionTransformerGenerator((shape, shape, 10, 5), projection_dim, transformer_layers, num_heads, mlp_head_units, num_classes)
-    optimizer = tfa.optimizers.AdamW(
-        learning_rate=0.001, weight_decay=0.0001
-    )
-    vit_gen.model.summary()
-
-    # vit_gen.model.compile(
-    #     optimizer=optimizer,
-    #     loss=keras.losses.CategoricalCrossentropy(from_logits=True),
-    #     metrics=[
-    #         keras.metrics.CategoricalAccuracy(name="accuracy")
-    #     ],
-    # )
-    loss_fn = keras.losses.CategoricalCrossentropy(from_logits=True)
-    epochs = 2
-    for epoch in range(epochs):
-        print("\nStart of epoch %d" % (epoch,))
-        for step, (x_batch_train, y_batch_train) in enumerate(train_dataset):
-            with tf.GradientTape() as tape:
-                logits = vit_gen.model(x_batch_train, training=True)  # Logits for this minibatch
-                loss_value = loss_fn(y_batch_train, logits)
-            grads = tape.gradient(loss_value, vit_gen.model.trainable_weights)
-            optimizer.apply_gradients(zip(grads, vit_gen.model.trainable_weights))
-            if step % 200 == 0:
-                print(
-                    "Training loss (for one batch) at step %d: %.4f"
-                    % (step, float(loss_value))
-                )
-                print("Seen so far: %s samples" % ((step + 1) * batch_size))
-
-    # history = vit_gen.model.fit(
-    #     x=dataset[np.newaxis,np.newaxis, :,:,:,:5],
-    #     y=y_dataset[np.newaxis,np.newaxis, :,:,:,:],
-    #     batch_size=1,
-    #     epochs=20,
-    # )
-    # load_weights_numpy(vit_gen.model, '/Users/zhaoyu/PycharmProjects/ViirsTimeSeriesModel/weights/ViT-B_16.npz', False, 256, 256)
+    load_weights_numpy(vit_gen.model, '/Users/zhaoyu/PycharmProjects/ViirsTimeSeriesModel/weights/ViT-B_16.npz', False, 256, 256)
     # history = vit_gen.run_experiment(train_dataset, val_dataset, batch_size=BATCH_SIZE, num_epochs=MAX_EPOCHS, learning_rate=0.001, weight_decay=0.0001)
